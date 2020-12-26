@@ -126,7 +126,7 @@ def startDownload(md5Code):
 def downloadChunk(ip, md5Code, reqByte, reqSize):
     global threadError
 
-    clientSocket = socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientSocket.settimeout(8)
 
     try:

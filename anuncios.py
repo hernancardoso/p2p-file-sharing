@@ -54,14 +54,13 @@ def createAnnounce(startPosition):
         if(sys.getsizeof((message+tempMessage).encode()) > int(config.data["udp_dgram_max_size"])):
             i -= 1
             break
-        else:
-            message += tempMessage
+        message += tempMessage
 
     if(i == len(v.myFiles) - 1):
         return True, startPosition, message
-    else:
-        startPosition = i + 1
-        return False, startPosition, message
+
+    startPosition = i + 1
+    return False, startPosition, message
 
 
 # Announcing shared files could be completed in more than one ANNOUNCE message.
