@@ -7,5 +7,5 @@ data = {
     "tcp_pckt_max_size": 4096,
     "max_announce_lines": 2,
     "shared_folder": "C:\\Users\\Redes\\SharedFolder",
-    "debugging": False
+    "debugging": False,
 }

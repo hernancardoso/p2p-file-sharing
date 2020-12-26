@@ -21,41 +21,48 @@ def init():
     while True:
         print("Waiting for connection...\n")
         connectionSock, addr = serverSocket.accept()
-        threading.Thread(target=serveClient, args=(
-            connectionSock, addr,)).start()
+        threading.Thread(
+            target=serveClient,
+            args=(
+                connectionSock,
+                addr,
+            ),
+        ).start()
 
 
 def serveClient(clientSock, addr):
     print("New thread - TCP connection with " + addr[0] + "\n")
 
     read, remaining = utils.read_line(clientSock, "")
-    if(read == "DOWNLOAD"):
+    if read == "DOWNLOAD":
 
         md5Code, remaining = utils.read_line(clientSock, remaining)
-        if(md5Code == "CLOSED"):
+        if md5Code == "CLOSED":
             return False
 
         reqStart, remaining = utils.read_line(clientSock, remaining)
-        if(reqStart == "CLOSED"):
+        if reqStart == "CLOSED":
             return False
 
         reqSize, remaining = utils.read_line(clientSock, remaining)
-        if(reqSize == "CLOSED"):
+        if reqSize == "CLOSED":
             return False
 
-        if (md5Code not in v.myFiles):
+        if md5Code not in v.myFiles:
             # client doesnt have requested file in shared_folder
             clientSock.sendall("DOWNLOAD FAILURE\nMISSING\n".encode())
             return False
 
-        if (not reqSize.isnumeric() or
-                not reqStart.isnumeric() or
-                int(reqStart) > int(v.myFiles[md5Code]["fileSize"])):
+        if (
+            not reqSize.isnumeric()
+            or not reqStart.isnumeric()
+            or int(reqStart) > int(v.myFiles[md5Code]["fileSize"])
+        ):
             clientSock.sendall("DOWNLOAD FAILURE\nBAD REQUEST\n".encode())
             print("error 1")
             return False
 
-        if (int(reqStart) + int(reqSize) > int(v.myFiles[md5Code]["fileSize"])):
+        if int(reqStart) + int(reqSize) > int(v.myFiles[md5Code]["fileSize"]):
             clientSock.sendall("DOWNLOAD FAILURE\nBAD REQUEST\n".encode())
             print("error 2")
             return False
@@ -63,8 +70,9 @@ def serveClient(clientSock, addr):
         reqSize = int(reqSize)
         reqStart = int(reqStart)
 
-        f = open(config.data["shared_folder"] + "\\" +
-                 v.myFiles[md5Code]["fileName"], "rb")
+        f = open(
+            config.data["shared_folder"] + "\\" + v.myFiles[md5Code]["fileName"], "rb"
+        )
         f.seek(reqStart)
 
         buffer = "DOWNLOAD OK\n".encode()
@@ -84,11 +92,13 @@ def startDownload(md5Code):
     timeNow = int(round(time.time() * 1000))
 
     # Filter servers and get only ones that are "still alive"
-    v.availableFiles[md5Code]["servers"] = {k: v for (
-        k, v) in v.availableFiles[md5Code]["servers"].items() if timeNow - v <= 90000}
-    if(len(v.availableFiles[md5Code]["servers"]) == 0):
-        v.availableFiles = {
-            k: v for (k, v) in v.availableFiles.items() if k != md5Code}
+    v.availableFiles[md5Code]["servers"] = {
+        k: v
+        for (k, v) in v.availableFiles[md5Code]["servers"].items()
+        if timeNow - v <= 90000
+    }
+    if len(v.availableFiles[md5Code]["servers"]) == 0:
+        v.availableFiles = {k: v for (k, v) in v.availableFiles.items() if k != md5Code}
         v.errorDownloading = "El archivo no esta disponible para descargar"
         return
 
@@ -109,11 +119,12 @@ def startDownload(md5Code):
 
         if actualServer == totalServers - 1:
             # if fileSize is 5 and 2 servers are available 5/2 = 2 and 1 is remaining, the remaining bytes are added to latest server in the array
-            chunkSize += (fileSize % totalServers)
+            chunkSize += fileSize % totalServers
 
         print("New thread, downloading from " + ip + "\n")
-        t[i] = threading.Thread(target=downloadChunk, args=(
-            ip, md5Code, startingByte, chunkSize))
+        t[i] = threading.Thread(
+            target=downloadChunk, args=(ip, md5Code, startingByte, chunkSize)
+        )
         t[i].start()
         i += 1
         actualServer += 1
@@ -135,15 +146,15 @@ def downloadChunk(ip, md5Code, reqByte, reqSize):
         v.errorDownloading = "Un servidor se desconecto"
 
         del v.availableFiles[md5Code]["servers"][ip]
-        if(len(v.availableFiles[md5Code]["servers"]) == 0):
+        if len(v.availableFiles[md5Code]["servers"]) == 0:
             del v.availableFiles[md5Code]
         return
 
-    utils.println("Connected to "+ip)
+    utils.println("Connected to " + ip)
 
-    request = "DOWNLOAD\n"+md5Code+"\n"+str(reqByte)+"\n"+str(reqSize)+"\n"
+    request = "DOWNLOAD\n" + md5Code + "\n" + str(reqByte) + "\n" + str(reqSize) + "\n"
     clientSocket.sendall(request.encode())
-    print("Sended:\n"+request)
+    print("Sended:\n" + request)
 
     fileName = v.availableFiles[md5Code]["fileNames"][0]
     downloadedSize = 0
@@ -153,25 +164,36 @@ def downloadChunk(ip, md5Code, reqByte, reqSize):
 
     answer = clientSocket.recv(config.data["tcp_pckt_max_size"])
     # Repeat until header is obtained
-    while(len(answer) < 12):
+    while len(answer) < 12:
         try:
             answer += clientSocket.recv(config.data["tcp_pckt_max_size"])
         except:
-            v.errorDownloading = "un servidor cerro la conexion, es necesario descargar de nuevo"
+            v.errorDownloading = (
+                "un servidor cerro la conexion, es necesario descargar de nuevo"
+            )
             f.close()
             clientSocket.close()
             return
 
-    if(answer[:12].decode().find("DOWNLOAD OK\n") != -1):
+    if answer[:12].decode().find("DOWNLOAD OK\n") != -1:
         answer = answer[12:]
         downloadedSize += len(answer)
-        utils.println("Got "+str(len(answer)) + " - "+str(downloadedSize) + "/" +
-                      str(reqSize) + " (" + str(int(downloadedSize * 100 / reqSize)) + ")%")
+        utils.println(
+            "Got "
+            + str(len(answer))
+            + " - "
+            + str(downloadedSize)
+            + "/"
+            + str(reqSize)
+            + " ("
+            + str(int(downloadedSize * 100 / reqSize))
+            + ")%"
+        )
         f.write(answer)
 
-        while (downloadedSize < reqSize):
+        while downloadedSize < reqSize:
 
-            if(v.errorDownloading != ""):
+            if v.errorDownloading != "":
                 # thread returned an error
                 f.close()
                 clientSocket.close()
@@ -180,14 +202,25 @@ def downloadChunk(ip, md5Code, reqByte, reqSize):
             try:
                 answer = clientSocket.recv(config.data["tcp_pckt_max_size"])
             except:
-                v.errorDownloading = "un servidor cerro la conexion, es necesario descargar de nuevo"
+                v.errorDownloading = (
+                    "un servidor cerro la conexion, es necesario descargar de nuevo"
+                )
                 f.close()
                 clientSocket.close()
                 return
 
             downloadedSize += len(answer)
-            utils.println("Got "+str(len(answer)) + " - "+str(downloadedSize) + "/" +
-                          str(reqSize) + " (" + str(int(downloadedSize * 100 / reqSize)) + ")%")
+            utils.println(
+                "Got "
+                + str(len(answer))
+                + " - "
+                + str(downloadedSize)
+                + "/"
+                + str(reqSize)
+                + " ("
+                + str(int(downloadedSize * 100 / reqSize))
+                + ")%"
+            )
             f.write(answer)
 
         print("DOWNLOADED")
@@ -195,9 +228,9 @@ def downloadChunk(ip, md5Code, reqByte, reqSize):
     else:
         # else if the message was not DOWNLOAD OK then the message received was DOWNLOAD FAILURE
         print(answer.decode())
-        while(answer.decode().count("\n") < 2):
+        while answer.decode().count("\n") < 2:
             answer += clientSocket.recv(config.data["tcp_pckt_max_size"])
-            if(answer == 0):
+            if answer == 0:
                 break
 
         v.errorDownloading = answer.split("\n")[1]
