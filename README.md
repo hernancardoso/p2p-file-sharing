@@ -1,42 +1,42 @@
 # p2p-file-sharing
 
-### Resumen
-Protocolo de transferencia de archivos en una red local P2P escrito en Python utilizando la librería sockets.
+### Summary
+File transfer protocol on a P2P local network written in Python using the sockets library.
+Host announces themselfs (and offered files) over the newtork via UDP broadcast, specifically sending one datagram every 30 seconds. Clients can also speed up this process by sending a special UDP broadcast datagram when running the script (works like a WiFi probe request)
 
-- Cada 30 segundos se ofrecen los archivos publicados por el usuario al resto de los peers mediante anuncios UDP.
-- Al descargar un archivo se crea una conexión TCP con cada uno de los seeders posibles, paralelizando la descarga del archivo.
-
-# Instrucciones
-
-1 - Modificar el archivo  settings/config.py
-
-2 - Ejecutar el archivo main.py
-
-3 - Para ingresar los comandos al sistema, establecer conexión con telnet utilizando el puerto 2025 (por defecto)
+Files are sended over TCP connections by all available peers that have the file that the "peer client" requested, each connection creates a new thread that will be responsible of downloading and writing into the memory a chunk of the requested file.
 
 
-# Comandos
+# Instructions
+
+1 - Modify the file settings/config.py
+
+2 - Run the file main.py
+
+3 - To enter the commands to the system, establish a connection with telnet using port 2025 (by default)
+
+
+# Commands
 - **list**
 
-  *Lista todos los archivos disponibles para ser descargados, es decir,*
-  *lista los archivos que otros usuarios del sistema están compartiendo.*
+  *List all files available to be downloaded, i.e. *
+  *lists the files that other system users are sharing. *
 
 - **offer < filename >**
 
-  *Agrega el archivo < filename > a la lista de archivos compartidos.*
-  *Todos los archivos que quieren ser compartidos deben estar en la*
-  *carpeta compartida que fue establecida para el sistema).*
+  * Add the file <filename> to the list of shared files. *
+  * All files that want to be shared must be in the *
+  * shared folder that was set for the system. *
 
 - **offering**
 
-  *Lista todos los archivos propios compartidos*
+  * List all shared own files *
 
 - **share**
 
-  *Comparte todos los archivos que se encuentran en la carpeta*
-  *compartida.*
+  * Share all files found in shared folder *
 
 - **get < fileid >**
 
-  *Comienza la descarga del archivo < fileid > . Cuando finaliza la*
-  *descarga el archivo se comparte automáticamente.*
+  * Start downloading the file with id fileid <fileid>. When the *
+  * download is completed the file is automatically shared to other peers. *
